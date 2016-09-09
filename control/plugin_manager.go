@@ -85,14 +85,6 @@ func newLoadedPlugins() *loadedPlugins {
 
 // add adds a loadedPlugin pointer to the table
 func (l *loadedPlugins) add(lp *loadedPlugin) serror.SnapError {
-	lowerName := strings.ToLower(lp.Meta.Name)
-	if lowerName != lp.Meta.Name {
-		controlLogger.WithFields(log.Fields{
-			"plugin-name":    lp.Meta.Name,
-			"plugin-version": lp.Meta.Version,
-			"plugin-type":    lp.Type.String(),
-		}).Warning("DEPRECATED: the name of the plugin is in uppercase, the next version of Snap will not support it anymore.")
-	}
 	l.Lock()
 	defer l.Unlock()
 
@@ -310,6 +302,15 @@ func (p *pluginManager) LoadPlugin(details *pluginDetails, emitter gomit.Emitter
 		}).Error("load plugin error when starting plugin")
 		return nil, serror.New(err)
 	}
+	lowerName := strings.ToLower(resp.Meta.Name)
+	if lowerName != resp.Meta.Name {
+		controlLogger.WithFields(log.Fields{
+			"plugin-name":    resp.Meta.Name,
+			"plugin-version": resp.Meta.Version,
+			"plugin-type":    resp.Type.String(),
+		}).Warning("DEPRECATED: the name of the plugin is in uppercase, the next version of Snap will not support it anymore.")
+	}
+	resp.Meta.Name = lowerName
 
 	ap, err := newAvailablePlugin(resp, emitter, ePlugin)
 	if err != nil {
